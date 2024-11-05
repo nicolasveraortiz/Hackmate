@@ -27,7 +27,7 @@ Installation
 
     bash
 
-git clone https://github.com/nicolas/hackmate.git
+git clone https://github.com/nicolasveraortiz/hackmate.git
 cd hackmate
 
 Build for ESP32
