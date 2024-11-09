@@ -47,9 +47,42 @@ void basta_wifi() {
     esp_wifi_stop();
     esp_wifi_deinit();
     ESP_ERROR_CHECK(esp_event_loop_delete_default());   
-    if (wifi_mode == WIFI_MODE_AP) {
-        ESP_ERROR_CHECK(esp_netif_delete_default_wifi_ap());
+}
+
+int iniciar_wifi_modo_sta() {
+    esp_err_t ret = esp_wifi_set_mode(WIFI_MODE_STA);
+    if (ret != ESP_OK) {
+        ESP_LOGE("wifi_init:STA", "Error fijando el modo Wi-Fi: %s", esp_err_to_name(ret));
+        return -1;
     }
+    return 0;
+}
+
+int iniciar_wifi_modo_ap() {
+    esp_netif_create_default_wifi_ap();
+    esp_err_t ret = esp_wifi_set_mode(WIFI_MODE_AP);
+    if (ret != ESP_OK) {
+        ESP_LOGE("wifi_init:AP", "Error fijando el modo Wi-Fi: %s", esp_err_to_name(ret));
+        return -1;
+    }
+    wifi_config_t ap_config = {
+        .ap = {
+            .ssid = "esp32_dummyap",
+            .ssid_len = 0,
+            .password = "dummypassword",
+            .channel = 0,
+            .authmode = WIFI_AUTH_WPA2_PSK,
+            .ssid_hidden = 1,
+            .max_connection = 4,
+            .beacon_interval = 60000
+        }
+    };
+    ret = esp_wifi_set_config(WIFI_IF_AP, &ap_config);
+    if (ret != ESP_OK) {
+        ESP_LOGE("wifi_init:AP", "Error fijando la configuración para el modo AP: %s", esp_err_to_name(ret));
+        return -1;
+    }
+    return 0;
 }
 
 int iniciar_wifi(const char *TAG, int mode) {
@@ -103,41 +136,6 @@ error:
     return rval;
 }
 
-int iniciar_wifi_modo_sta() {
-    esp_err_t ret = esp_wifi_set_mode(WIFI_MODE_STA);
-    if (ret != ESP_OK) {
-        ESP_LOGE("wifi_init:STA", "Error fijando el modo Wi-Fi: %s", esp_err_to_name(ret));
-        return -1;
-    }
-    return 0;
-}
-
-int iniciar_wifi_modo_ap() {
-    esp_netif_create_default_wifi_ap();
-    esp_err_t ret = esp_wifi_set_mode(WIFI_MODE_AP);
-    if (ret != ESP_OK) {
-        ESP_LOGE("wifi_init:AP", "Error fijando el modo Wi-Fi: %s", esp_err_to_name(ret));
-        return -1;
-    }
-    wifi_config_t ap_config = {
-        .ap = {
-            .ssid = "esp32_dummyap",
-            .ssid_len = 0,
-            .password = "dummypassword",
-            .channel = 0,
-            .authmode = WIFI_AUTH_WPA2_PSK,
-            .ssid_hidden = 1,
-            .max_connection = 4,
-            .beacon_interval = 60000
-        }
-    };
-    ret = esp_wifi_set_config(WIFI_IF_AP, &ap_config);
-    if (ret != ESP_OK) {
-        ESP_LOGE("wifi_init:AP", "Error fijando la configuración para el modo AP: %s", esp_err_to_name(ret));
-        return -1;
-    }
-    return 0;
-}
 
 bool esta_wifi() {
     return wifi_iniciado;
@@ -150,7 +148,7 @@ void send_deauth_frame(const wifi_ap_record_t ap_record) {
     memcpy(deauth_frame+10, ap_record.bssid, 6);
     memcpy(deauth_frame+16, ap_record.bssid, 6);
 
-    ESP_LOGD("Sending deauth frame...");
+    ESP_LOGI(TAG, "Sending deauth frame...");
     ESP_ERROR_CHECK(esp_wifi_80211_tx(WIFI_IF_AP, deauth_frame, sizeof(deauth_frame), false));
 }
 
