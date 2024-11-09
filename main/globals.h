@@ -13,10 +13,6 @@
 #include "driver/gpio.h"
 #include "botones.h"
 
-// Función para navegación cíclica
-int mod(int a, int n);
-void mostrar_mensaje(const char *mensaje, bool aviso, menu_t menu_prev);
-
 // Enum para los menús
 typedef enum {
   MENU_PRINCIPAL, 
@@ -30,6 +26,11 @@ typedef enum {
   MENU_LISTA_WIFI,
   MENU_ATAQUE_WIFI
 } menu_t;
+
+// Función para navegación cíclica
+int mod(int a, int n);
+void mostrar_mensaje(const char *mensaje, bool aviso, menu_t menu_prev);
+
 
 // Variables globales
 extern int item_sel_idx;

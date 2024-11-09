@@ -23,6 +23,6 @@ bool esta_wifi();
 // Funciones
 void attack_dos_stop();
 void attack_dos_start(wifi_ap_record_t ap_record);
-void send_deauth_frame(const wifi_ap_record_t ap_record);
+void send_deauth_frame(void *ap_record);
 
 #endif /* MAIN_ATAQUES_WIFI_H_ */
