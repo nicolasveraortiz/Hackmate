@@ -150,8 +150,8 @@ void send_deauth_frame(void *ap_record) {
     uint8_t deauth_frame[sizeof(deauth_frame_template)];
     
     memcpy(deauth_frame, deauth_frame_template, sizeof(deauth_frame));
-    memcpy(deauth_frame+10, ap_record->bssid, 6);
-    memcpy(deauth_frame+16, ap_record->bssid, 6);
+    memcpy(deauth_frame+10, ((wifi_ap_record_t *)ap_record)->bssid, 6);
+    memcpy(deauth_frame+16, ((wifi_ap_record_t *)ap_record)->bssid, 6);
 
     ESP_LOGI(TAG, "Sending deauth frame...");
     ESP_ERROR_CHECK(esp_wifi_80211_tx(WIFI_IF_AP, deauth_frame, sizeof(deauth_frame), false));
