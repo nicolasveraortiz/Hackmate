@@ -16,7 +16,7 @@ const char *rssi_to_icon(int8_t rssi);
 wifi_ap_record_t ap_selected;
 
 // Funciones WiFi
-int iniciar_wifi(const char *TAG);
+int iniciar_wifi(const char *TAG, int mode);
 void basta_wifi();
 bool esta_wifi();
 
