@@ -111,33 +111,33 @@ void leer_botones() {
         break;
 
       case MENU_LISTA_WIFI:
-    	if (item_sel_idx == 0) {
-			menu_actual = MENU_WIFI;
-			item_sel_idx = 0;
-			basta_guaifai();
-		}
-		else if (item_sel_idx > 0) {
-			menu_actual = MENU_ATAQUE_WIFI;
-			ap_selected = ap_list->records[item_sel_idx-1];
-			item_sel_idx = 0;
-		}
+        if (item_sel_idx == 0) {
+            menu_actual = MENU_WIFI;
+            item_sel_idx = 0;
+            basta_guaifai();
+        }
+        else if (item_sel_idx > 0) {
+            menu_actual = MENU_ATAQUE_WIFI;
+            ap_selected = ap_list->records[item_sel_idx-1];
+            item_sel_idx = 0;
+        }
         break;
       
       case MENU_ATAQUE_WIFI:
-      	if (item_sel_idx == 0) {
-			  printf("Definir tiempo");
-		  }
-		else if (item_sel_idx == 1) {
-			for (int i=0; i<6; ++i) {
-				printf("%.2x%c", ap_selected.bssid[i], (i == 5) ? '\n' : ':');
-			}
-			attack_dos_start(ap_selected);
-		}
-      	else if (item_sel_idx == MENU_ATAQUE_NUM_ITEMS - 1){
-			  menu_actual = MENU_LISTA_WIFI;
-			  item_sel_idx = 0;
-		}
-		break;
+        if (item_sel_idx == 0) {
+              printf("Definir tiempo");
+          }
+        else if (item_sel_idx == 1) {
+            for (int i=0; i<6; ++i) {
+                printf("%.2x%c", ap_selected.bssid[i], (i == 5) ? '\n' : ':');
+            }
+            attack_dos_start(ap_selected);
+        }
+        else if (item_sel_idx == MENU_ATAQUE_NUM_ITEMS - 1){
+              menu_actual = MENU_LISTA_WIFI;
+              item_sel_idx = 0;
+        }
+        break;
         
       case MENU_DISPOSITIVO:
         if (item_sel_idx == 0) {

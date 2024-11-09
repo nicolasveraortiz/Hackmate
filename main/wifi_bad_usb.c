@@ -123,9 +123,9 @@ void conectar_bad_usb(int item_sel_idx) {
         mostrar_mensaje("Conexion fallida", true);
         goto wifi_close;
     }
-	mostrar_mensaje("Enviando...", false);
+    mostrar_mensaje("Enviando...", false);
     ESP_LOGI(TAG, "Conexion Wi-Fi exitosa");
-	vTaskDelay(3000 / portTICK_PERIOD_MS);
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
     // Enviar la solicitud HTTP
     ESP_LOGI(TAG, "Enviando datos Bad USB...");
     esp_http_client_config_t config = {
@@ -156,7 +156,7 @@ void conectar_bad_usb(int item_sel_idx) {
 
     esp_http_client_cleanup(client);
 wifi_disconnect:
-	esp_wifi_disconnect();
+    esp_wifi_disconnect();
 wifi_close:
     esp_wifi_stop();
     esp_wifi_deinit();

@@ -18,21 +18,21 @@ void mostrar_mensaje(const char *mensaje, bool aviso) {
     u8g2_ClearBuffer(&u8g2);
     u8g2_DrawStr(&u8g2, 10, 20, mensaje);
     if (aviso){
-	    u8g2_DrawStr(&u8g2, 30, 60, "<- Volver");
-	    u8g2_DrawBox(&u8g2, 30, 49, 63, 11);  // Cuadro de "Volver"
-	    u8g2_SendBuffer(&u8g2);
+        u8g2_DrawStr(&u8g2, 30, 60, "<- Volver");
+        u8g2_DrawBox(&u8g2, 30, 49, 63, 11);  // Cuadro de "Volver"
+        u8g2_SendBuffer(&u8g2);
 
-	    // Espera hasta que el boton "sel" sea presionado para "volver"
-	    while (gpio_get_level(PIN_BOT_SEL) == 1) {
-			menu_actual = MENU_USB;
-			item_sel_idx = 0; 
-	        vTaskDelay(10 / portTICK_PERIOD_MS);
-	    }
-	}
-	    // Agregar un pequeño retraso para evitar rebotes
-	u8g2_SendBuffer(&u8g2);
-	vTaskDelay(200 / portTICK_PERIOD_MS);
-	    
+        // Espera hasta que el boton "sel" sea presionado para "volver"
+        while (gpio_get_level(PIN_BOT_SEL) == 1) {
+            menu_actual = MENU_USB;
+            item_sel_idx = 0; 
+            vTaskDelay(10 / portTICK_PERIOD_MS);
+        }
+    }
+        // Agregar un pequeño retraso para evitar rebotes
+    u8g2_SendBuffer(&u8g2);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
+        
 }
 
 // Variables

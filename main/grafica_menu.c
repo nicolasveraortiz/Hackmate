@@ -67,8 +67,8 @@ const int RFID_MENU_NUM_ITEMS = 3;
 const int MENU_ATAQUE_NUM_ITEMS = 3;
 
 void update_ap_list() {
-	mostrar_mensaje ("Buscar redes...", false);
-	ap_list = get_aps();
+    mostrar_mensaje ("Buscar redes...", false);
+    ap_list = get_aps();
 }
 
 // Función para obtener el número de elementos del menú
@@ -98,12 +98,12 @@ int get_num_items_for_menu(menu_t menu) {
     case MENU_WIFI:
       return WIFI_MENU_NUM_ITEMS;
 
-	case MENU_LISTA_WIFI:
-	  return ap_list->count + 1;
-	  
-	case MENU_ATAQUE_WIFI:
-		return MENU_ATAQUE_NUM_ITEMS;
-		
+    case MENU_LISTA_WIFI:
+      return ap_list->count + 1;
+      
+    case MENU_ATAQUE_WIFI:
+        return MENU_ATAQUE_NUM_ITEMS;
+        
     default:
       return MAIN_NUM_ITEMS;  
   }
@@ -135,14 +135,14 @@ const char *get_items_for_menu(menu_t menu, int idx) {
     case MENU_WIFI:
       return wifi_menu_items[idx];
 
-	case MENU_LISTA_WIFI: {
-	  if (idx == 0) return "<- Volver";
-	  return (const char *)(ap_list->records[idx-1].ssid);
-	}
-	
-	case MENU_ATAQUE_WIFI:
-		return wifi_ataque_menu_items[idx];
-	
+    case MENU_LISTA_WIFI: {
+      if (idx == 0) return "<- Volver";
+      return (const char *)(ap_list->records[idx-1].ssid);
+    }
+    
+    case MENU_ATAQUE_WIFI:
+        return wifi_ataque_menu_items[idx];
+    
     default:
       return menu_items[idx];
   }
