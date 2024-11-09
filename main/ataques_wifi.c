@@ -42,6 +42,7 @@ void attack_dos_start(wifi_ap_record_t ap_record) {
 void attack_dos_stop() {
     ESP_ERROR_CHECK(esp_timer_stop(deauth_timer_handle));
     esp_timer_delete(deauth_timer_handle);
+    basta_wifi();
     ESP_LOGI(TAG, "DoS attack stopped");
 }
 
@@ -105,14 +106,14 @@ int iniciar_wifi(const char *TAG, int mode) {
     }
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error inicializando NVS: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Init NVS!", true);
+        mostrar_mensaje("Error Init NVS!", true, MENU_WIFI);
         goto error;
     }
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ret = esp_wifi_init(&cfg);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error inicializando Wi-Fi: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Init Wi-Fi!", true);
+        mostrar_mensaje("Error Init Wi-Fi!", true, MENU_WIFI);
         goto error;
     }
     int err = -1;
@@ -123,14 +124,14 @@ int iniciar_wifi(const char *TAG, int mode) {
         err = iniciar_wifi_modo_sta();
     }
     if (err == -1) {
-        mostrar_mensaje("Error Modo Wi-Fi!", true);
+        mostrar_mensaje("Error Modo Wi-Fi!", true, MENU_WIFI);
         goto error;
     }
 
     ret = esp_wifi_start();
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error iniciando Wi-Fi: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Start Wi-Fi!", true);
+        mostrar_mensaje("Error Start Wi-Fi!", true, MENU_WIFI);
         goto error;
     }
     rval = 0;
@@ -145,7 +146,7 @@ bool esta_wifi() {
     return wifi_iniciado;
 }
 
-void send_deauth_frame(const wifi_ap_record_t ap_record) {
+void send_deauth_frame(void *ap_record) {
     uint8_t deauth_frame[sizeof(deauth_frame_template)];
     
     memcpy(deauth_frame, deauth_frame_template, sizeof(deauth_frame));

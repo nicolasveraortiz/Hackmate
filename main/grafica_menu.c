@@ -67,7 +67,7 @@ const int RFID_MENU_NUM_ITEMS = 3;
 const int MENU_ATAQUE_NUM_ITEMS = 3;
 
 void update_ap_list() {
-    mostrar_mensaje ("Buscar redes...", false);
+    mostrar_mensaje ("Buscar redes...", false, 0);
     ap_list = get_aps();
 }
 

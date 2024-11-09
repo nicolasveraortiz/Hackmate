@@ -132,7 +132,7 @@ void leer_botones() {
                 printf("%.2x%c", ap_selected.bssid[i], (i == 5) ? '\n' : ':');
             }
             attack_dos_start(ap_selected);
-	    mostrar_mensaje("Atacando...", true);
+	    mostrar_mensaje("Atacando...", true, MENU_WIFI);
 	    attack_dos_stop();
         }
         else if (item_sel_idx == MENU_ATAQUE_NUM_ITEMS - 1){

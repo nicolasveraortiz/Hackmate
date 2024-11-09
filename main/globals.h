@@ -15,7 +15,7 @@
 
 // Función para navegación cíclica
 int mod(int a, int n);
-void mostrar_mensaje(const char *mensaje, bool aviso);
+void mostrar_mensaje(const char *mensaje, bool aviso, menu_t menu_prev);
 
 // Enum para los menús
 typedef enum {

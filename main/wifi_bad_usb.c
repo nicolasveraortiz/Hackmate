@@ -41,7 +41,7 @@ void conectar_bad_usb(int item_sel_idx) {
     }
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error inicializando NVS: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Init NVS!", true);
+        mostrar_mensaje("Error Init NVS!", true, MENU_USB);
         return;
     }
 
@@ -57,7 +57,7 @@ void conectar_bad_usb(int item_sel_idx) {
     ret = esp_wifi_init(&cfg);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error inicializando Wi-Fi: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Init Wi-Fi!", true);
+        mostrar_mensaje("Error Init Wi-Fi!", true, MENU_USB);
         return;
     }
 
@@ -66,7 +66,7 @@ void conectar_bad_usb(int item_sel_idx) {
     ret = esp_wifi_set_mode(WIFI_MODE_STA);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error configurando modo Wi-Fi: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Configuracion Wi-Fi!", true);
+        mostrar_mensaje("Error Configuracion Wi-Fi!", true, MENU_USB);
         return;
     }
 
@@ -81,17 +81,17 @@ void conectar_bad_usb(int item_sel_idx) {
     ret = esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error configurando credenciales Wi-Fi: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Configuracion!", true);
+        mostrar_mensaje("Error Configuracion!", true, MENU_USB);
         return;
     }
 
     // Iniciar Wi-Fi
     ESP_LOGI(TAG, "Iniciando Wi-Fi...");
-    mostrar_mensaje("Conectando...", false);
+    mostrar_mensaje("Conectando...", false, 0);
     ret = esp_wifi_start();
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error iniciando Wi-Fi: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Iniciando Wi-Fi!", true);
+        mostrar_mensaje("Error Iniciando Wi-Fi!", true, MENU_USB);
         return;
     }
 
@@ -100,7 +100,7 @@ void conectar_bad_usb(int item_sel_idx) {
     ret = esp_wifi_connect();
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error conectando a Wi-Fi: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Conexion!", true);
+        mostrar_mensaje("Error Conexion!", true, MENU_USB);
         goto wifi_close;
     }
 
@@ -120,10 +120,10 @@ void conectar_bad_usb(int item_sel_idx) {
 
     if (!connected) {
         ESP_LOGE(TAG, "Conexion Wi-Fi fallida después de 10 segundos.");
-        mostrar_mensaje("Conexion fallida", true);
+        mostrar_mensaje("Conexion fallida", true, MENU_USB);
         goto wifi_close;
     }
-    mostrar_mensaje("Enviando...", false);
+    mostrar_mensaje("Enviando...", false, 0);
     ESP_LOGI(TAG, "Conexion Wi-Fi exitosa");
     vTaskDelay(3000 / portTICK_PERIOD_MS);
     // Enviar la solicitud HTTP
@@ -137,7 +137,7 @@ void conectar_bad_usb(int item_sel_idx) {
     esp_http_client_handle_t client = esp_http_client_init(&config);
     if (client == NULL) {
         ESP_LOGE(TAG, "No se pudo inicializar el cliente HTTP");
-        mostrar_mensaje("Error Cliente HTTP", true);
+        mostrar_mensaje("Error Cliente HTTP", true, MENU_USB);
         goto wifi_disconnect;
     }
 
@@ -151,7 +151,7 @@ void conectar_bad_usb(int item_sel_idx) {
         ESP_LOGI(TAG, "Solicitud HTTP enviada correctamente. Codigo de respuesta: %d", esp_http_client_get_status_code(client));
     } else {
         ESP_LOGE(TAG, "Error en la solicitud HTTP: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Se ha enviado!", true);
+        mostrar_mensaje("Se ha enviado!", true, MENU_USB);
     }
 
     esp_http_client_cleanup(client);

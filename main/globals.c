@@ -14,7 +14,7 @@ int mod(int a, int n) {
 }
 
 // Funcion para mostrar mensajes en pantalla
-void mostrar_mensaje(const char *mensaje, bool aviso) {
+void mostrar_mensaje(const char *mensaje, bool aviso, menu_t menu_prev) {
     u8g2_ClearBuffer(&u8g2);
     u8g2_DrawStr(&u8g2, 10, 20, mensaje);
     if (aviso){
@@ -24,7 +24,7 @@ void mostrar_mensaje(const char *mensaje, bool aviso) {
 
         // Espera hasta que el boton "sel" sea presionado para "volver"
         while (gpio_get_level(PIN_BOT_SEL) == 1) {
-            menu_actual = MENU_USB;
+            menu_actual = menu_prev;
             item_sel_idx = 0; 
             vTaskDelay(10 / portTICK_PERIOD_MS);
         }
