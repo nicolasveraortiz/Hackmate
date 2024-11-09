@@ -114,7 +114,7 @@ void leer_botones() {
         if (item_sel_idx == 0) {
             menu_actual = MENU_WIFI;
             item_sel_idx = 0;
-            basta_guaifai();
+            basta_wifi();
         }
         else if (item_sel_idx > 0) {
             menu_actual = MENU_ATAQUE_WIFI;
