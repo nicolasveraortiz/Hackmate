@@ -30,8 +30,6 @@ extern char rfid_menu_items[][20];
 extern char battery_menu_items[][20];
 extern char wifi_ataque_menu_items[][20];
 
-wifictl_ap_records_t *ap_list;
-
 // Prototipos de funciones
 void update_ap_list();
 void init_display(u8g2_t *u8g2);

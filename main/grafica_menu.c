@@ -54,8 +54,6 @@ char rfid_menu_items[][20] =
 char wifi_ataque_menu_items[][20] =
   { "Tiempo", "Iniciar Ataque", "<- Volver" };
 
-wifictl_ap_records_t *ap_list;
-
 const int MAIN_NUM_ITEMS = 5;
 const int USB_NUM_ITEMS = 5;
 const int NFC_NUM_ITEMS = 3;
@@ -67,8 +65,8 @@ const int RFID_MENU_NUM_ITEMS = 3;
 const int MENU_ATAQUE_NUM_ITEMS = 3;
 
 void update_ap_list() {
-	mostrar_mensaje ("Buscar redes...", false);
-	ap_list = get_aps();
+    mostrar_mensaje ("Buscar redes...", false);
+    get_aps();
 }
 
 // Función para obtener el número de elementos del menú
@@ -98,12 +96,12 @@ int get_num_items_for_menu(menu_t menu) {
     case MENU_WIFI:
       return WIFI_MENU_NUM_ITEMS;
 
-	case MENU_LISTA_WIFI:
-	  return ap_list->count + 1;
-	  
-	case MENU_ATAQUE_WIFI:
-		return MENU_ATAQUE_NUM_ITEMS;
-		
+    case MENU_LISTA_WIFI:
+      return wifictl_get_ap_count() + 1;
+      
+    case MENU_ATAQUE_WIFI:
+        return MENU_ATAQUE_NUM_ITEMS;
+        
     default:
       return MAIN_NUM_ITEMS;  
   }
@@ -135,14 +133,15 @@ const char *get_items_for_menu(menu_t menu, int idx) {
     case MENU_WIFI:
       return wifi_menu_items[idx];
 
-	case MENU_LISTA_WIFI: {
-	  if (idx == 0) return "<- Volver";
-	  return (const char *)(ap_list->records[idx-1].ssid);
-	}
-	
-	case MENU_ATAQUE_WIFI:
-		return wifi_ataque_menu_items[idx];
-	
+    case MENU_LISTA_WIFI: {
+      if (idx == 0) return "<- Volver";
+      
+      return (const char *)(wifictl_get_ap_record(idx-1)->ssid);
+    }
+    
+    case MENU_ATAQUE_WIFI:
+        return wifi_ataque_menu_items[idx];
+    
     default:
       return menu_items[idx];
   }
@@ -154,7 +153,7 @@ const uint8_t *get_icon_bitmap(menu_t menu, int idx) {
       return bitmap_icons[idx];
     case MENU_LISTA_WIFI:
       if (idx == 0) return NULL;
-      return (const uint8_t *)rssi_to_icon(ap_list->records[idx-1].rssi);
+      return (const uint8_t *)rssi_to_icon(wifictl_get_ap_record(idx-1)->rssi);
     default:
       return NULL;
   }

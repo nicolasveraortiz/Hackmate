@@ -41,4 +41,6 @@ const wifictl_ap_records_t *wifictl_get_ap_records();
  */
 const wifi_ap_record_t *wifictl_get_ap_record(unsigned index);
 
+uint16_t wifictl_get_ap_count();
+
 #endif

@@ -49,3 +49,7 @@ const wifi_ap_record_t *wifictl_get_ap_record(unsigned index) {
     }
     return &ap_records.records[index];
 }
+
+uint16_t wifictl_get_ap_count() {
+	return ap_records.count;
+}
