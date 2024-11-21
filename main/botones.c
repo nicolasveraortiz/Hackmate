@@ -1,15 +1,15 @@
 #include "botones.h"
 #include "ataques_wifi.h"
+#include "esp_sleep.h"
+#include "freertos/idf_additions.h"
+#include "portmacro.h"
+#include "u8g2.h"
 #include "wifi.h"
 #include "beacon_spam.h"
 #include "grafica_menu.h"
 #include "wifi_bad_usb.h"
 #include "driver/gpio.h"
 #include "globals.h"
-#include "nvs_flash.h"
-#include "esp_wifi.h"
-#include "esp_log.h"
-#include <stdio.h>
 
 
 // Función para configurar los pines de los botones
@@ -65,7 +65,6 @@ void leer_botones() {
         if (item_sel_idx == USB_NUM_ITEMS - 1) {
           menu_actual = MENU_PRINCIPAL;
           item_sel_idx = 0;
-        // Aca tendria que apagar el WiFi 
           break;
         }
 
@@ -77,7 +76,7 @@ void leer_botones() {
 
       case MENU_NFC:
         if (item_sel_idx == 0) {
-          printf("clonar_dialog()");
+          mostrar_mensaje("En desarrollo!", true, MENU_NFC);
         } else if (item_sel_idx == 1) {
           menu_actual = MENU_EMULAR;
           item_sel_idx = 0;
@@ -104,7 +103,8 @@ void leer_botones() {
           item_sel_idx = 0;
         }
         else if (item_sel_idx == 1) {
-          attack_beacon_spam();
+			mostrar_mensaje("Beacon Spam act...", false, menu_actual);
+            attack_beacon_spam();
         }
         else if (item_sel_idx == 2) {
           menu_actual = MENU_PRINCIPAL;
@@ -119,27 +119,17 @@ void leer_botones() {
             basta_wifi();
         }
         else if (item_sel_idx > 0) {
-            menu_actual = MENU_ATAQUE_WIFI;
             ap_selected = wifictl_get_ap_record(item_sel_idx-1);
-            item_sel_idx = 0;
-        }
-        break;
-      
-      case MENU_ATAQUE_WIFI:
-        if (item_sel_idx == 1) {
             attack_dos_start(ap_selected);
-        }
-        else if (item_sel_idx == MENU_ATAQUE_NUM_ITEMS - 1){
-              menu_actual = MENU_LISTA_WIFI;
-              item_sel_idx = 0;
+            item_sel_idx = 0;
         }
         break;
         
       case MENU_DISPOSITIVO:
         if (item_sel_idx == 0) {
-          printf("Emulando dispositivo");
+          mostrar_mensaje("En desarrollo!", true, MENU_DISPOSITIVO);
         } else if (item_sel_idx == 1) {
-          printf("Eliminando dispositivo");
+          mostrar_mensaje("En desarrollo!", true, MENU_DISPOSITIVO);
         } else if (item_sel_idx == 2) {
           menu_actual = MENU_EMULAR;
           item_sel_idx = 0;
@@ -148,10 +138,18 @@ void leer_botones() {
 
       case MENU_BATERIA:
         if (item_sel_idx == 0) {
-          printf("Ver nivel");
-        } else if (item_sel_idx == 1) {
-          printf("Modo ahorro");
-        } else if (item_sel_idx == 2) {
+          mostrar_mensaje("En desarrollo!", true, MENU_BATERIA);
+        } 
+        else if (item_sel_idx == 1) {
+		  esp_sleep_enable_ext0_wakeup(PIN_BOT_SEL, 0);
+		  mostrar_mensaje("Apagando...", false, menu_actual);
+		  vTaskDelay(1500 / portTICK_PERIOD_MS);
+		  u8g2_ClearBuffer(&u8g2);
+		  u8g2_SendBuffer(&u8g2);
+		  vTaskDelay(1000 / portTICK_PERIOD_MS);
+          esp_deep_sleep_start();
+        } 
+        else if (item_sel_idx == 2) {
           menu_actual = MENU_PRINCIPAL;
           item_sel_idx = 0;
         }
@@ -159,9 +157,9 @@ void leer_botones() {
 
       case MENU_RFID:
         if (item_sel_idx == 0) {
-          printf("Clonar senal");
+          mostrar_mensaje("En desarrollo!", true, MENU_RFID);
         } else if (item_sel_idx == 1) {
-          printf("Emular senal");
+          mostrar_mensaje("En desarrollo!", true, MENU_RFID);
         } else if (item_sel_idx == 2) {
           menu_actual = MENU_PRINCIPAL;
           item_sel_idx = 0;
@@ -184,4 +182,3 @@ void leer_botones() {
         refrescar = true;
     }
 }
-// Pregunta: las variables como referencia o item_sel_idx, que se usan en multiples lugares, deberian ir a modulos?

