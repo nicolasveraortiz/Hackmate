@@ -5,12 +5,10 @@
  *      Author: nicotina
  */
 
-#include "grafica_menu.h"
 #include "globals.h"
 #include "grafica_menu.h"
 #include "u8g2_esp32_hal.h"
 #include "u8g2.h"
-#include "wifi_controller.h"
 #include "ataques_wifi.h"
 
 void init_display(u8g2_t *u8g2) {
@@ -21,11 +19,11 @@ void init_display(u8g2_t *u8g2) {
     u8g2_esp32_hal_init(u8g2_esp32_hal);
 
     // Inicializar u8g2 con SH1106 y la dirección 0x3C (0x78 en 8 bits)
-    u8g2_Setup_sh1106_i2c_128x64_noname_f(
-        u8g2, U8G2_R0, u8g2_esp32_i2c_byte_cb, u8g2_esp32_gpio_and_delay_cb);
+    u8g2_Setup_sh1106_i2c_128x64_noname_f(u8g2, U8G2_R0, u8g2_esp32_i2c_byte_cb, u8g2_esp32_gpio_and_delay_cb);
 
     // Establecer la dirección (0x3C o 0x3D según la configuración)
-    u8g2_SetI2CAddress(u8g2, 0x3C << 1);  // Usa 0x3D si prefieres la otra dirección
+    //  1101100
+    u8g2_SetI2CAddress(u8g2, 0x3C << 1);  // Usar 0x3D si no funciona
 
     // Inicializar la pantalla
     u8g2_InitDisplay(u8g2);
@@ -38,7 +36,7 @@ void init_display(u8g2_t *u8g2) {
 char menu_items[][20] =
   { "Bad USB", "Bateria", "NFC", "RFID", "Wi-Fi" };
 char usb_menu_items[][20] =
-  { "Forzar Apagado", "Matar Interfaz", "Agotar recursos", "Rick Roll", "<- Volver" };
+  { "Forzar Apagado", "Suspender", "Agotar recursos", "Rick Roll", "<- Volver" };
 char nfc_menu_items[][20] =
   { "Clonar disp.", "Emular disp.", "<- Volver" };
 char nfc_submenu_emular_items[][20] =
@@ -46,13 +44,11 @@ char nfc_submenu_emular_items[][20] =
 char nfc_submenu_device_items[][20] =
   { "Emular", "Eliminar", "<- Volver" };
 char wifi_menu_items[][20] =
-  { "Desautenticar", "Gemelo Malvado", "<- Volver" };
+  { "Desautenticar", "Beacon Spam", "<- Volver" };
 char battery_menu_items[][20] = 
   { "Ver nivel", "Apagar", "<- Volver" };
 char rfid_menu_items[][20] =
   { "Clonar senal", "Emular senal", "<- Volver" };
-char wifi_ataque_menu_items[][20] =
-  { "Tiempo", "Iniciar Ataque", "<- Volver" };
 
 const int MAIN_NUM_ITEMS = 5;
 const int USB_NUM_ITEMS = 5;
@@ -62,10 +58,9 @@ const int NFC_SUBMENU_DEVICE_NUM_ITEMS = 3;
 const int WIFI_MENU_NUM_ITEMS = 3;
 const int BATTERY_MENU_NUM_ITEMS = 3;
 const int RFID_MENU_NUM_ITEMS = 3;
-const int MENU_ATAQUE_NUM_ITEMS = 3;
 
 void update_ap_list() {
-    mostrar_mensaje ("Buscar redes...", false);
+    mostrar_mensaje ("Buscar redes...", false, menu_actual);
     get_aps();
 }
 
@@ -97,11 +92,8 @@ int get_num_items_for_menu(menu_t menu) {
       return WIFI_MENU_NUM_ITEMS;
 
     case MENU_LISTA_WIFI:
-      return wifictl_get_ap_count() + 1;
+      return wifictl_get_ap_count() + 1; // Obtiene el numero de elementos de la lista WiFi
       
-    case MENU_ATAQUE_WIFI:
-        return MENU_ATAQUE_NUM_ITEMS;
-        
     default:
       return MAIN_NUM_ITEMS;  
   }
@@ -139,9 +131,6 @@ const char *get_items_for_menu(menu_t menu, int idx) {
       return (const char *)(wifictl_get_ap_record(idx-1)->ssid);
     }
     
-    case MENU_ATAQUE_WIFI:
-        return wifi_ataque_menu_items[idx];
-    
     default:
       return menu_items[idx];
   }
@@ -158,6 +147,20 @@ const uint8_t *get_icon_bitmap(menu_t menu, int idx) {
       return NULL;
   }
   return NULL;
+}
+
+void mostrar_splash(u8g2_t *u8g2) {
+    u8g2_ClearBuffer(u8g2);
+
+    // Configura la fuente para el texto
+    u8g2_SetFont(u8g2, u8g2_font_adventurer_tr);
+
+    u8g2_DrawStr(u8g2, 24, 24, "HackMate");
+    u8g2_SetFont(u8g2, u8g2_font_courB08_tr);
+    u8g2_DrawStr(u8g2, 12, 40, "Proyecto EETN 24");
+    
+    u8g2_SendBuffer(u8g2);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
 }
 
 // Función para renderizar el menú en la pantalla
@@ -192,13 +195,6 @@ void render_menu(u8g2_t *u8g2, menu_t menu) {
     u8g2_DrawFrame(u8g2, 1, 22, 122, 20);
 
     u8g2_SendBuffer(u8g2);  // Enviar a la pantalla
-}
-
-// Función para limpiar pantalla al cambiar entre menús
-void clear_and_render_menu() {  
-  u8g2_ClearBuffer(&u8g2);  // Limpia el buffer de la pantalla antes de redibujar
-  render_menu(&u8g2, menu_actual);
-  u8g2_SendBuffer(&u8g2);  // Envía el contenido del buffer a la pantalla
 }
 
 

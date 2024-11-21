@@ -12,7 +12,6 @@
 
 // Prototipos de funciones
 void conectar_bad_usb(int item_sel_idx);
-void mostrar_mensaje(const char* mensaje, bool aviso);  // Nueva función para mostrar mensajes en pantalla
 
 extern bool connected;
 #endif

@@ -7,9 +7,10 @@
  *      Author: nicotina
  */
 
+#include <stdint.h>
+void siguiente_canal();
 void generar_ssid(uint8_t *out);
 void generar_mac(uint8_t *out);
-void send_random_beacon();
 void attack_beacon_spam();
 
 #endif

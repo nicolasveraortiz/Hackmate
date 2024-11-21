@@ -13,10 +13,6 @@
 #include "driver/gpio.h"
 #include "botones.h"
 
-// Función para navegación cíclica
-int mod(int a, int n);
-void mostrar_mensaje(const char *mensaje, bool aviso);
-
 // Enum para los menús
 typedef enum {
   MENU_PRINCIPAL, 
@@ -27,8 +23,7 @@ typedef enum {
   MENU_WIFI,
   MENU_BATERIA,
   MENU_RFID,
-  MENU_LISTA_WIFI,
-  MENU_ATAQUE_WIFI
+  MENU_LISTA_WIFI
 } menu_t;
 
 // Variables globales
@@ -37,5 +32,8 @@ extern bool refrescar;
 extern menu_t menu_actual;
 extern u8g2_t u8g2;  // Declaración externa de u8g2
 
+// Funciones
+int mod(int a, int n);
+void mostrar_mensaje(const char *mensaje, bool aviso, menu_t menu);
 
 #endif

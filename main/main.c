@@ -1,18 +1,12 @@
-#include "esp_wifi.h"
 #include "grafica_menu.h"
 #include "botones.h"
-#include "wifi_bad_usb.h"
 #include "globals.h"
-#include "driver/gpio.h"
-
 
 void app_main() {
     // Inicialización de la pantalla U8g2
     init_display(&u8g2);
     configurar_botones();
-    // Inicialización de Wi-Fi (en modo apagado por defecto)
-    esp_wifi_stop();
-
+	mostrar_splash(&u8g2);
     // Ciclo principal
     while (true) {
         // Leer los botones y actualizar el estado del menú

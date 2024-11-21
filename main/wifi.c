@@ -19,9 +19,21 @@ int ieee80211_raw_frame_sanity_check(int32_t arg1, int32_t arg2, int32_t arg3) {
 void basta_wifi() {
     if (!wifi_iniciado) return;
     wifi_iniciado = false;
-    esp_wifi_stop();
-    esp_wifi_deinit();
-    ESP_ERROR_CHECK(esp_event_loop_delete_default());   
+
+    // Detener Wi-Fi
+    ESP_ERROR_CHECK(esp_wifi_stop());
+
+    // Eliminar el controlador de eventos
+    ESP_ERROR_CHECK(esp_event_loop_delete_default());
+
+    // Destruir la interfaz de red
+    esp_netif_t *netif = esp_netif_get_default_netif();
+    if (netif != NULL) {
+        esp_netif_destroy(netif);
+    }
+
+    // Desinicializar Wi-Fi
+    ESP_ERROR_CHECK(esp_wifi_deinit());
 }
 
 int iniciar_wifi_modo_sta() {
@@ -76,14 +88,14 @@ int iniciar_wifi(const char *TAG, int mode) {
     }
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error inicializando NVS: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Init NVS!", true);
+        mostrar_mensaje("Error Init NVS!", true, MENU_WIFI);
         goto error;
     }
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ret = esp_wifi_init(&cfg);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error inicializando Wi-Fi: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Init Wi-Fi!", true);
+        mostrar_mensaje("Error Init Wi-Fi!", true, MENU_WIFI);
         goto error;
     }
     int err = -1;
@@ -94,14 +106,14 @@ int iniciar_wifi(const char *TAG, int mode) {
         err = iniciar_wifi_modo_sta();
     }
     if (err == -1) {
-        mostrar_mensaje("Error Modo Wi-Fi!", true);
+        mostrar_mensaje("Error Modo Wi-Fi!", true, MENU_WIFI);
         goto error;
     }
 
     ret = esp_wifi_start();
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "Error iniciando Wi-Fi: %s", esp_err_to_name(ret));
-        mostrar_mensaje("Error Start Wi-Fi!", true);
+        mostrar_mensaje("Error Start Wi-Fi!", true, MENU_WIFI);
         goto error;
     }
     rval = 0;
